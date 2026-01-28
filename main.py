@@ -24,7 +24,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
-        # "https://your-react-app.vercel.app",
+        "https://tic-tac-toe-minimax-frontend.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
