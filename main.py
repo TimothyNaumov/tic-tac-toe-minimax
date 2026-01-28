@@ -39,3 +39,10 @@ def get_optimal_move(board: List[List[str]] = Body(..., example=[["X", "O", "X"]
         "score": score,
         "iterations": stats['iterations']
     }
+
+if __name__ == "__main__":
+    import os
+
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
