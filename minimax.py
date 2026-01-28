@@ -27,7 +27,7 @@ def get_winner(board: List[List[str]]) -> Optional[str]:
 def is_board_full(board: List[List[str]]) -> bool:
     return all(cell != "" for row in board for cell in row)
 
-def minimax(board: List[List[str]], maximizing_player: str, stats: dict) -> Tuple[int, Optional[List[List[str]]]]:
+def minimax(board: List[List[str]], maximizing_player: str, depth: int, stats: dict) -> Tuple[int, Optional[List[List[str]]]]:
     """
     Returns (score, best_move) where best_move is only set at the top level
     """
@@ -36,7 +36,7 @@ def minimax(board: List[List[str]], maximizing_player: str, stats: dict) -> Tupl
 
     winner = get_winner(board)
     if winner:
-        return (10 if winner == maximizing_player else -10, None)
+        return ((10 - depth) if winner == maximizing_player else (-10 + depth), None)
 
     if is_board_full(board):
         return (0, None)
@@ -52,7 +52,7 @@ def minimax(board: List[List[str]], maximizing_player: str, stats: dict) -> Tupl
             if board[row][col] == "":
                 board[row][col] = player
 
-                score, _ = minimax(board, maximizing_player, stats)
+                score, _ = minimax(board, maximizing_player, depth + 1, stats)
 
                 board[row][col] = ""
 
@@ -68,3 +68,70 @@ def minimax(board: List[List[str]], maximizing_player: str, stats: dict) -> Tupl
                         best_move[row][col] = player
 
     return (best_score, best_move)
+
+def minimax_alpha_beta(board: List[List[str]], maximizing_player: str, depth: int,
+                       stats: dict, alpha: float = float('-inf'), beta: float = float('inf')) -> Tuple[int, Optional[List[List[str]]]]:
+    """
+    Returns (score, best_move) where best_move is only set at the top level
+    """
+
+    stats['iterations'] += 1
+
+    winner = get_winner(board)
+    if winner:
+        return ((10 - depth) if winner == maximizing_player else (-10 + depth), None)
+
+    if is_board_full(board):
+        return (0, None)
+
+    player = current_player(board)
+    is_maximizing = (player == maximizing_player)
+
+    best_score = float('-inf') if is_maximizing else float('inf')
+    best_move = None
+
+    for row in range(3):
+        for col in range(3):
+            if board[row][col] == "":
+                board[row][col] = player
+
+                score, _ = minimax_alpha_beta(board, maximizing_player, depth + 1, stats, alpha, beta)
+
+                board[row][col] = ""
+
+                if is_maximizing:
+                    if score > best_score:
+                        best_score = score
+                        best_move = copy.deepcopy(board)
+                        best_move[row][col] = player
+                    alpha = max(alpha, best_score)
+                    if beta <= alpha:
+                        break
+                else:
+                    if score < best_score:
+                        best_score = score
+                        best_move = copy.deepcopy(board)
+                        best_move[row][col] = player
+                    beta = min(beta, best_score)
+                    if beta <= alpha:
+                        break
+
+        if beta <= alpha:
+            break
+
+    return (best_score, best_move)
+
+if __name__ == "__main__":
+    board = [["X", "", ""], ["", "", ""], ["", "", ""]]
+    player = current_player(board)
+    stats = {'iterations': 0}
+    score, best_move = minimax(board, player, 0, stats)
+    ab_stats = {'iterations': 0}
+    ab_score, ab_best_move = minimax_alpha_beta(board, player, 0, ab_stats)
+    print(f"Optimal move for {player} with score {score} found in {stats['iterations']} iterations:")
+    for row in best_move:
+        print(row)
+
+    print(f"Optimal move for {player} with alpha-beta score {ab_score}: found in {ab_stats['iterations']} iterations:")
+    for row in ab_best_move:
+        print(row)
